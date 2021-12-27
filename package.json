@@ -1,0 +1,36 @@
+{
+  "name": "curso-mean2",
+  "version": "1.0.0",
+  "description": "Proyecto de API Rest con NodeJS para el curso de Victor Robles",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/odiez3/curso-nodejs-angular-mongo.git"
+  },
+  "author": "Oscar Diez Torres",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/odiez3/curso-nodejs-angular-mongo/issues"
+  },
+  "homepage": "https://github.com/odiez3/curso-nodejs-angular-mongo#readme",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.17.2",
+    "connect-multiparty": "^2.0.0",
+    "express": "^4.15.3",
+    "html-pdf": "^2.2.0",
+    "jwt-simple": "^0.5.1",
+    "moment": "^2.18.1",
+    "mongoose": "^4.11.3",
+    "mongoose-auto-increment": "^5.0.1",
+    "mongoose-pagination": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
