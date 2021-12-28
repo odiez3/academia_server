@@ -12,6 +12,7 @@ var PayChargeSchema = Schema({
     isLesson:Boolean, //Si es un cobro por clase 
     assistence: Date, //Fecha de asistencia
     assisted:Boolean,
+    ticketId:String,
     paidOut:Boolean, // Si se encuentra pagada esta clase es true
     isMonthly:Boolean, //Si esta en true es porque pertenece a un pago mensual
     isPayment:Boolean, //Si esta en true es porque pertecene a un extra

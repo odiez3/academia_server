@@ -3,6 +3,7 @@
 var PaymentCharge = require('../models/paymentCharge');
 var Extra = require('../models/extras');
 var Student = require('../models/student');
+const ShortId = require('shortid');
 var moment = require('moment');
 var pdf = require('html-pdf');
 
@@ -21,14 +22,15 @@ async function savePayment(req, res) {
             if (!params.extraId) {
                 res.status(500).send({ message: "Indique el extra a pagar." });
             } else {
-                Extra.findById(params.extraId, (error, extra) => {
+                Extra.findById(params.extraId, async (error, extra) => {
 
                     if (!error) {
                         if (extra) {
-
+                            console.log("entra al if");
                             if (extra.finished) {
                                 res.status(500).send({ message: "Este cargo ya fue liquidado." });
                             } else {
+                                console.log("Entra alelse");
                                 let remaining = extra.amount - params.monto;
                                 if (extra.remaining) {
 
@@ -55,9 +57,34 @@ async function savePayment(req, res) {
                                     payment.isMonthly = true;
                                 }
 
+                                if (!params.ticketId) {
+
+                                    let ticketId = ShortId.generate();
+
+                                    let existeTicket = true;
+
+                                    //REvisa que no existe el ticket
+
+                                    while (existeTicket === true) {
+                                        let ticket = await PaymentCharge.findOne({ ticketId: ticketId })
+                                        if (ticket) {
+                                            ticketId = ShortId.generate();
+                                        } else {
+                                            existeTicket = false;
+                                        }
+                                    }
+
+                                    payment.ticketId = ticketId;
+                                } else {
+                                    payment.ticketId = params.ticketId;
+                                }
+
+                                console.log(payment);
+
+
                                 payment.save((error, paymetnStored) => {
                                     if (!error) {
-                                        res.status(200).send({ message: "Abono aplicado correctamente." });
+                                        res.status(200).send({ message: "Abono aplicado correctamente.", paymetnStored });
                                     } else {
                                         console.log(error);
                                         res.status(500).send({ message: "El abono no pudo ser agregado correctamente." });
@@ -407,15 +434,15 @@ function payMonth(req, res) {
 
 function getAllPaymentsCharges(req, res) {
     let params = req.body;
-    let from = params.from;
-    let to = params.to;
+
     PaymentCharge.find({
         date: {
-            $gte: new Date(from),
-            $lte: new Date(to)
+            $gte: moment(params.from).startOf('day'),
+            $lte: moment(params.to).endOf('day')
         }
     }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date').exec((err, paymentsCharges) => {
         if (!err) {
+            console.log(paymentsCharges.length);
             res.status(200).send(paymentsCharges);
         } else {
             res.status(404).send({ message: "No se obtuvieron resultados." });
@@ -548,9 +575,10 @@ function pdfPaymentsCharges(req, res) {
             payment = value.charge;
         }
 
-        if (!charge && !isWeekend) {
+        //  if (!charge && !isWeekend) {
 
 
+        if (value.paidOut) {
 
             contenido += `
     <tr style="font-size:10px">
@@ -580,6 +608,67 @@ function pdfPaymentsCharges(req, res) {
 
 }
 
+function getAllForTicket(req, res) {
+
+    let params = req.body;
+    if (!params || !params.ticketId) {
+        return res.status(404).send({ message: "No se ha enviado el número de ticket" });
+    } else {
+        PaymentCharge.find({ ticketId: params.ticketId }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date')
+            .exec((err, paymentsCharges) => {
+                if (!err) {
+                    res.status(200).send(paymentsCharges);
+                } else {
+                    res.status(404).send({ message: "No se encontro el ticket." });
+                }
+            });
+    }
+
+
+}
+
+function getAllForTicketsForAlumno(req, res) {
+
+    let params = req.body;
+    if (!params || !params.idAlumno) {
+        return res.status(404).send({ message: "No se ha enviado el id del alumno" });
+    } else {
+
+        Student.findOne({consecutivo:params.idAlumno}).exec((err, student) => {
+            if(student){
+                PaymentCharge.distinct("ticketId", { student: student._id }).exec(async (err, tickets) => {
+                    if(tickets){
+                    
+                       let items = [];
+
+                       for(let i = 0; i < tickets.length; i++){
+                          let tic = tickets[i];
+
+                          let paymentCharg = await PaymentCharge.findOne({ ticketId: tic }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date').exec();
+                          console.log(paymentCharg);
+                            if(paymentCharg){
+                                items.push(paymentCharg)
+                            }
+                       }
+
+
+                            res.status(200).send(items);
+
+                    }else{
+                         res.status(404).send({ message: "No se encontraron tickets." });
+                    }
+                });
+            }else{
+                res.status(404).send({ message: "No se encontro el alumno." });
+            }
+        });
+
+  
+    }
+
+
+}
+
 
 module.exports = {
     savePayment,
@@ -596,5 +685,7 @@ module.exports = {
     payLesson,
     payMonth,
     getAllPaymentsCharges,
-    pdfPaymentsCharges
+    pdfPaymentsCharges,
+    getAllForTicket,
+    getAllForTicketsForAlumno
 }

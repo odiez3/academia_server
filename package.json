@@ -25,10 +25,11 @@
     "express": "^4.15.3",
     "html-pdf": "^2.2.0",
     "jwt-simple": "^0.5.1",
-    "moment": "^2.18.1",
+    "moment": "^2.29.1",
     "mongoose": "^4.11.3",
     "mongoose-auto-increment": "^5.0.1",
-    "mongoose-pagination": "^1.0.0"
+    "mongoose-pagination": "^1.0.0",
+    "shortid": "^2.2.16"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

@@ -16,8 +16,8 @@ var extra_routes = require('./routes/extras');
 var paymentCharge_routes = require('./routes/paymentCharge');
 var prueba_route = require('./routes/prueba');
 
-app.use(bodyParser.urlencoded({extended:false}));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit: "4mb" ,extended: true }));
+app.use(bodyParser.json({limit: "4mb"}));
 
 // Configurar cabeceras http
 app.use((req, res, next)=>{

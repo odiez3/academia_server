@@ -7,6 +7,7 @@ var Student = require('../models/student');
 var PaymentCharge = require('../models/paymentCharge');
 const moment = require('moment');
 var weekendDays = [4, 5, 6, 0];
+const ShortId = require('shortid');
 
 
 
@@ -100,8 +101,8 @@ function storeAssitance(req, res, assistance, paymentStored) {
 
 function getAssitancesByID(req, res) {
     let params = req.body;
-    let from = params.from;
-    let to = params.to;
+    let from = moment(moment(params.from).startOf('day'));
+    let to = moment(moment(params.to).endOf('day'));
 
     if (!params.id) {
         res.status(500).send({ message: "Indique el estudiante." });
@@ -109,14 +110,13 @@ function getAssitancesByID(req, res) {
 
         PaymentCharge.find({
             student: params.id, assistence: {
-                $gte: new Date(from),
-                $lte: new Date(to)
+                $gte: from,
+                $lte: to
             }
         }, (err, documents) => {
             if (err) {
                 res.status(500).send({ message: "No se lograron obtener las asistencias de este alumgno." });
             } else {
-                console.log(documents);
                 res.status(200).send(documents);
             }
         });
@@ -251,10 +251,11 @@ function saveAssistanceClase(req, res) {
                     })
                 } else {
                     var paymentCharge = new PaymentCharge();
-                    paymentCharge.date = new Date(`${year}/${month}/${day}`);
+                    paymentCharge.date = new Date();
                     paymentCharge.assistence = new Date(`${year}/${month}/${day}`);
                     paymentCharge.student = params.id;
                     paymentCharge.paidOut = params.paidOut;
+                    paymentCharge.ticketId = params.ticketId || false; 
                     paymentCharge.isWeekend = false;
                     paymentCharge.isLesson = true;
                     // console.log(currentDay);
@@ -265,6 +266,26 @@ function saveAssistanceClase(req, res) {
                         paymentCharge.charge = params.priceLesson;
                     }
                     paymentCharge.assisted = params.assisted;
+
+
+                    if(params.paidOut && !params.ticketId){
+                        let ticketId = ShortId.generate();
+
+                        let existeTicket = true;
+
+                        //REvisa que no existe el ticket
+
+                        while(existeTicket === true) {
+                            let ticket = await PaymentCharge.findOne({ ticketId: ticketId })
+                            if (ticket) {
+                                ticketId = ShortId.generate();
+                            } else {
+                                existeTicket = false;
+                            }
+                        }
+
+                        paymentCharge.ticketId = ticketId;
+                    }
                     //Revisa que si el dia es Jueves. para saber si aplicar un cargo o no
                     if (currentDay === 4) {
                         let today = day;
