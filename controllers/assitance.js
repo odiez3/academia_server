@@ -6,7 +6,7 @@ var Assistance = require('../models/assistance');
 var Student = require('../models/student');
 var PaymentCharge = require('../models/paymentCharge');
 const moment = require('moment');
-var weekendDays = [4, 5, 6, 0];
+var weekendDays = [5, 6, 0];
 const ShortId = require('shortid');
 
 
@@ -287,36 +287,36 @@ function saveAssistanceClase(req, res) {
                         paymentCharge.ticketId = ticketId;
                     }
                     //Revisa que si el dia es Jueves. para saber si aplicar un cargo o no
-                    if (currentDay === 4) {
-                        let today = day;
-                        let fchaMoment = new moment(year + "/" + month + "/" + today, 'YYYY/MM/DD');
-                        // console.log(fchaMoment);
-                        paymentCharge.charge = 0;
-                        paymentCharge.paidOut = false;
-                        //Recupera si pago las 3 clases pasadas correspondientes a Lunes, Martes y Miercoles
-                        for (var i = 0; i <= 2; i++) {
-                            fchaMoment = fchaMoment.subtract(1, "days");
-                            let dateAssistanceSearch = new Date(fchaMoment.format('YYYY/MM/DD'));
-                            // console.log(dateAssistanceSearch);
-                            try {
-                                let check = await new Promise((resolve) => {
-                                    PaymentCharge.findOne({ student: params.id, assistence: dateAssistanceSearch }, (err, pay) => {
-                                        if (err) {
-                                            console.log(err);
-                                        } else {
-                                            resolve(pay);
-                                        }
-                                    });
-                                });
-                                if (!check) {
-                                    paymentCharge.paidOut = params.paidOut;
-                                    paymentCharge.charge = params.priceLesson;
-                                }
-                            } catch (error) {
+                    // if (currentDay === 4) {
+                    //     let today = day;
+                    //     let fchaMoment = new moment(year + "/" + month + "/" + today, 'YYYY/MM/DD');
+                    //     // console.log(fchaMoment);
+                    //     paymentCharge.charge = 0;
+                    //     paymentCharge.paidOut = false;
+                    //     //Recupera si pago las 3 clases pasadas correspondientes a Lunes, Martes y Miercoles
+                    //     for (var i = 0; i <= 2; i++) {
+                    //         fchaMoment = fchaMoment.subtract(1, "days");
+                    //         let dateAssistanceSearch = new Date(fchaMoment.format('YYYY/MM/DD'));
+                    //         // console.log(dateAssistanceSearch);
+                    //         try {
+                    //             let check = await new Promise((resolve) => {
+                    //                 PaymentCharge.findOne({ student: params.id, assistence: dateAssistanceSearch }, (err, pay) => {
+                    //                     if (err) {
+                    //                         console.log(err);
+                    //                     } else {
+                    //                         resolve(pay);
+                    //                     }
+                    //                 });
+                    //             });
+                    //             if (!check) {
+                    //                 paymentCharge.paidOut = params.paidOut;
+                    //                 paymentCharge.charge = params.priceLesson;
+                    //             }
+                    //         } catch (error) {
 
-                            }
-                        }
-                    }
+                    //         }
+                    //     }
+                    // }
                     console.log(paymentCharge.charge)
                     console.log(currentDay);
                     console.log(paymentCharge.assistence);

@@ -369,12 +369,16 @@ function payLesson(req, res) {
                     if (toPay.paidOut) {
                         res.status(500).send({ message: "Esta clase se encuntra pagada." });
                     } else {
-                        PaymentCharge.findByIdAndUpdate(params.id, { paidOut: true, date: new Date() }, (err, result) => {
+                        let ticketId = ShortId.generate();
+                        if (params.ticketId) {
+                            ticketId = params.ticketId;
+                        }
+                        PaymentCharge.findByIdAndUpdate(params.id, { paidOut: true, date: new Date(), ticketId: ticketId }, (err, result) => {
                             if (err) {
                                 console.log(err);
                                 res.status(500).send({ message: "No se logro aplicar el pago." });
                             } else {
-                                res.status(200).send({ message: "Clase pagada con éxito." });
+                                res.status(200).send({ message: "Clase pagada con éxito.", ticketId });
                             }
                         });
 
@@ -442,6 +446,8 @@ function getAllPaymentsCharges(req, res) {
         }
     }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date').exec((err, paymentsCharges) => {
         if (!err) {
+            debugger;
+
             console.log(paymentsCharges.length);
             res.status(200).send(paymentsCharges);
         } else {
@@ -578,7 +584,7 @@ function pdfPaymentsCharges(req, res) {
         //  if (!charge && !isWeekend) {
 
 
-        if (value.paidOut) {
+        if (value.paidOut || value.isPayment) {
 
             contenido += `
     <tr style="font-size:10px">
@@ -634,36 +640,36 @@ function getAllForTicketsForAlumno(req, res) {
         return res.status(404).send({ message: "No se ha enviado el id del alumno" });
     } else {
 
-        Student.findOne({consecutivo:params.idAlumno}).exec((err, student) => {
-            if(student){
+        Student.findOne({ consecutivo: params.idAlumno }).exec((err, student) => {
+            if (student) {
                 PaymentCharge.distinct("ticketId", { student: student._id }).exec(async (err, tickets) => {
-                    if(tickets){
-                    
-                       let items = [];
+                    if (tickets) {
 
-                       for(let i = 0; i < tickets.length; i++){
-                          let tic = tickets[i];
+                        let items = [];
 
-                          let paymentCharg = await PaymentCharge.findOne({ ticketId: tic }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date').exec();
-                          console.log(paymentCharg);
-                            if(paymentCharg){
+                        for (let i = 0; i < tickets.length; i++) {
+                            let tic = tickets[i];
+
+                            let paymentCharg = await PaymentCharge.findOne({ ticketId: tic }).populate({ path: 'concept' }).populate({ path: 'student' }).sort('date').exec();
+                            console.log(paymentCharg);
+                            if (paymentCharg) {
                                 items.push(paymentCharg)
                             }
-                       }
+                        }
 
 
-                            res.status(200).send(items);
+                        res.status(200).send(items);
 
-                    }else{
-                         res.status(404).send({ message: "No se encontraron tickets." });
+                    } else {
+                        res.status(404).send({ message: "No se encontraron tickets." });
                     }
                 });
-            }else{
+            } else {
                 res.status(404).send({ message: "No se encontro el alumno." });
             }
         });
 
-  
+
     }
 
 
